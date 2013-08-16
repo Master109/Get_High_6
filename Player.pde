@@ -24,7 +24,7 @@ class Player
 
   void run()
   {
-    boolean goingAgainstHorizontalSpring = false;
+    boolean inHorizontalSpring = false;
     shouldBreak = false;
     float minDistToSpring = 9999999;
     for (int x = int(width / 2 - (playerSize.x / 2)); x <= int(width / 2 + (playerSize.x / 2)); x ++)
@@ -43,8 +43,8 @@ class Player
         }
         if (get(x, y) == END_COLOR)
         {
-          if (bestTimes[currentElement][currentLevel] < minTime[currentLevel])
-            minTime[currentLevel] = bestTimes[currentElement][currentLevel];
+          if (bestTimes.get(currentElement)[currentLevel] < minTime[currentLevel])
+            minTime[currentLevel] = bestTimes.get(currentElement)[currentLevel];
           if (hasStar)
             beatLevelWithStar[currentLevel] = true;
           currentLevel ++;
@@ -67,7 +67,7 @@ class Player
             {
               vel.add(s.springVel);
               if (s.springVel.x != 0)
-                goingAgainstHorizontalSpring = true;
+                inHorizontalSpring = true;
             }
           }
           shouldBreak = true;
@@ -145,8 +145,7 @@ class Player
       if (get(x, int(height / 2 + (playerSize.y / 2) + 1)) == WALL_COLOR)
         grounded = true;
     }
-    walkingVel = new PVector();
-    if (goingAgainstHorizontalSpring || vel.x <= walkingVel.x)
+    if (inHorizontalSpring || vel.x <= walkingVel.x)
     {
       friction = 1;
     }
@@ -163,10 +162,11 @@ class Player
       vel.y -= 7;
     if (!grounded)
       vel.y += gravity;
+    walkingVel.x += vel.x;
     vel.x *= friction;
     loc.add(vel);
     loc.add(walkingVel);
-    walkingVel.add(vel);
+    walkingVel = new PVector();
   }
 }
 

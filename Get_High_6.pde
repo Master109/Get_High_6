@@ -11,6 +11,7 @@ ArrayList<Spring> springs;
 ArrayList<Mist> mists;
 ArrayList<Missile> missiles;
 ArrayList<MissileLauncher> missileLaunchers;
+ArrayList<float[]> bestTimes;
 boolean[] keys;
 boolean hasStar;
 boolean beatLevelWithStar[];
@@ -18,7 +19,6 @@ boolean paused;
 boolean shouldBreak;
 int currentLevel;
 int currentElement;
-float[][] bestTimes;
 float[] minTime;
 int restartTimer;
 
@@ -48,12 +48,13 @@ void setup()
   paused = true;
   currentLevel = 1;
   currentElement = 0;
-  bestTimes = new float[9999][NUM_OF_LEVELS + 2];
   minTime = new float[NUM_OF_LEVELS + 2];
   beatLevelWithStar = new boolean[NUM_OF_LEVELS + 2];
   for (int i = 1; i <= NUM_OF_LEVELS; i ++)
   {
     minTime[i] = 999999999;
+    bestTimes.add(new float[NUM_OF_LEVELS + 2]);
+    bestTimes.get(currentElement)[i] = 999999999;
     beatLevelWithStar[i] = false;
   }
   reset();
@@ -61,7 +62,6 @@ void setup()
 
 void reset()
 {
-  restartTimer = 0;
   hasStar = false;
   walls = new ArrayList<Wall>();
   hazards = new ArrayList<Hazard>();
@@ -178,12 +178,12 @@ void reset()
     hazards.add(new Hazard(new PVector(width / 2 - 650, height / 2 - 50), new PVector(width / 2 - 555, height / 2 - 50), new PVector(width / 2 - 650, height / 2 - 50), new PVector(10, 10), 2.5));
     hazards.add(new Hazard(new PVector(), new PVector(), new PVector(width / 2, height / 2), new PVector(10, 10), 0));
     missilesStartLocs[5] = new PVector(width / 2 + 40, height / 2);
-    missileLaunchers.add(new MissileLauncher(new PVector(), new PVector(), new PVector(missilesStartLocs[5].x, missilesStartLocs[5].y), 60, 0));
+    //missileLaunchers.add(new MissileLauncher(new PVector(), new PVector(), new PVector(missilesStartLocs[5].x, missilesStartLocs[5].y), 60, 0));
     walls.add(new Wall(new PVector(), new PVector(), new PVector(width / 2 - 995, height / 2 + 10), new PVector(2020, 10), 0));
-    walls.add(new Wall(new PVector(), new PVector(), new PVector(width / 2 + 1000, height / 2 + 10), new PVector(500, 10), 0));
-    //springs.add(new Spring(new PVector(), new PVector(), new PVector(width / 2 + 1000, height / 2 - 8), new PVector(500, 10), new PVector(-.225, 0), 0));
-    //springs.add(new Spring(new PVector(), new PVector(), new PVector(width / 2 - 995, height / 2 - 8), new PVector(1980, 10), new PVector(.225, 0), 0));
-    star = new Star(NO_WAYPOINT, new PVector(width / 2 + 1250, height / 2), new PVector(width / 2 + 523, height / 2), new PVector(), 1);
+    walls.add(new Wall(new PVector(), new PVector(), new PVector(width / 2 + 780, height / 2 + 10), new PVector(500, 10), 0));
+    springs.add(new Spring(new PVector(), new PVector(), new PVector(width / 2 + 780, height / 2 - 8), new PVector(500, 10), new PVector(-.225, 0), 0));
+    springs.add(new Spring(new PVector(), new PVector(), new PVector(width / 2 - 995, height / 2 - 8), new PVector(1980, 10), new PVector(.225, 0), 0));
+    star = new Star(NO_WAYPOINT, new PVector(width / 2 + 1030, height / 2), new PVector(width / 2 + 283, height / 2), new PVector(), 1);
   }
   currentElement ++;
 }
@@ -200,6 +200,7 @@ void draw()
     if (restartTimer >= 180)
     {
       currentLevel = NUM_OF_LEVELS;
+      restartTimer = 0;
       reset();
     }
   }
@@ -340,21 +341,22 @@ void draw()
               for (Missile m : missiles)
               {
                 if (s.loc.dist(m.loc) == minDistToMissile)
-                  m.vel.y -= 1;
+                  m.vel.add(s.springVel);
               }
             }
           }
         }
       }
-      bestTimes[currentElement][currentLevel] += 1 / frameRate;
+      bestTimes.get(currentElement)[currentLevel] += 1 / frameRate;
       fill(255);
       textAlign(LEFT, TOP);
-      text(bestTimes[currentElement][currentLevel], player.loc.x - (width / 2) + 25, player.loc.y - (height / 2) + 30);
+      text(bestTimes.get(currentElement)[currentLevel], player.loc.x - (width / 2) + 25, player.loc.y - (height / 2) + 30);
     }
+    player.show();
   }
   for (Spring s : springs)
   {
-    if (s.mistNumCurrent < s.springSize.x * s.springSize.y / 50)
+    if (s.mistNumCurrent < s.springSize.x * s.springSize.y / 75)
       mists.add(new Mist(PVector.add(s.springVel, s.vel), new PVector(random(s.loc.x - (s.springSize.x / 2) + (MIST_SIZE / 2), s.loc.x + (s.springSize.x / 2) - (MIST_SIZE / 2)), random(s.loc.y - (s.springSize.y / 2) + (MIST_SIZE / 2), s.loc.y + (s.springSize.y / 2) - (MIST_SIZE / 2)))));
     s.mistNumCurrent = 0;
     for (Mist m : mists)
@@ -379,7 +381,6 @@ void draw()
         m.exists = false;
     }
   }
-  player.show();
 }
 
 void keyPressed()
